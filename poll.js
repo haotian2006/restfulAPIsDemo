@@ -1,21 +1,37 @@
 const express = require("express");
+const crypto = require("crypto");
 
 const votes = { yes: 0, no: 0 };
-const votesByIp = new Map();
+const votesByUserId = new Map();
+const namesByUserId = new Map();
 
-const namesByIp = new Map();
-
-// forum posts storage: { ip, name, text, timestamp }
+// forum posts storage: { userId, name, text, timestamp }
 const posts = [];
 
 const router = express.Router();
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
+function generateUserId() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+function getUserId(req, res) {
+  let userId = req.cookies?.poll_user_id;
+  if (!userId) {
+    userId = generateUserId();
+    res.cookie("poll_user_id", userId, {
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+      httpOnly: false,
+    });
+  }
+  return userId;
+}
+
 router.get("/", (req, res) => {
-  const ip = req.ip;
-  const prev = votesByIp.get(ip);
-  const name = namesByIp.get(ip);
+  const userId = getUserId(req, res);
+  const prev = votesByUserId.get(userId);
+  const name = namesByUserId.get(userId);
 
   const result = { yes: votes.yes, no: votes.no, name: name };
   if (prev) {
@@ -26,9 +42,9 @@ router.get("/", (req, res) => {
 
 router.post("/", (req, res) => {
   const vote = req.body.vote;
-  const ip = req.ip;
+  const userId = getUserId(req, res);
 
-  let name = namesByIp.get(ip);
+  let name = namesByUserId.get(userId);
 
   if (
     req.body.name &&
@@ -36,7 +52,7 @@ router.post("/", (req, res) => {
     req.body.name.trim()
   ) {
     name = req.body.name.trim();
-    namesByIp.set(ip, name);
+    namesByUserId.set(userId, name);
   }
 
   if (!name) {
@@ -47,7 +63,7 @@ router.post("/", (req, res) => {
     return res.status(400).json({ error: "invalid vote" });
   }
 
-  const previous = votesByIp.get(ip);
+  const previous = votesByUserId.get(userId);
   if (previous) {
     if (previous === vote) {
       return res.json({ success: true });
@@ -57,24 +73,24 @@ router.post("/", (req, res) => {
 
   if (previous) {
     console.log(
-      `User ${name} has changed their vote from ${previous} to ${vote} IP: ${ip}`,
+      `User ${name} has changed their vote from ${previous} to ${vote}`,
     );
   } else {
-    console.log(`User ${name} has voted: ${vote}. IP: ${ip}`);
+    console.log(`User ${name} has voted: ${vote}.`);
   }
 
   votes[vote]++;
-  votesByIp.set(ip, vote);
+  votesByUserId.set(userId, vote);
   res.json({ success: true });
 });
 
 router.post("/name", (req, res) => {
-  const ip = req.ip;
+  const userId = getUserId(req, res);
   const name = req.body.name;
   if (typeof name !== "string" || !name.trim()) {
     return res.status(400).json({ error: "invalid name" });
   }
-  namesByIp.set(ip, name.trim());
+  namesByUserId.set(userId, name.trim());
   res.json({ success: true });
 });
 
@@ -88,9 +104,9 @@ router.get("/form-posts", (req, res) => {
 });
 
 router.post("/form-posts", (req, res) => {
-  const ip = req.ip;
+  const userId = getUserId(req, res);
   const text = req.body.text;
-  const name = namesByIp.get(ip);
+  const name = namesByUserId.get(userId);
 
   if (!name) {
     return res.status(400).json({ error: "name required" });
@@ -101,7 +117,7 @@ router.post("/form-posts", (req, res) => {
   }
 
   posts.push({
-    ip,
+    userId,
     name,
     text: text.trim(),
     timestamp: new Date().toISOString(),

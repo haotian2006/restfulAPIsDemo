@@ -229,12 +229,12 @@
   </details>
 
   <h2>Poll API</h2>
-  <p>Endpoints for voting and name management, accessed via <code>/poll/api</code>.</p>
+  <p>Endpoints for voting and name management, accessed via <code>/poll/api</code>. Users are identified by a unique cookie-based ID.</p>
 
   <details>
     <summary><span class="method GET">GET</span> /poll/api</summary>
     <div class="section">
-      <p>Fetch current vote totals and user's stored name (based on IP).</p>
+      <p>Fetch current vote totals and user's stored name (identified by cookie).</p>
       <p><strong>Success</strong> (200 OK):</p>
       <pre>{ "yes": 10, "no": 4, "name": "Alice", "voted": "yes" }</pre>
       <p>Fields: <code>yes</code> and <code>no</code> are vote counts, <code>name</code> is the user's name, <code>voted</code> shows the user's current vote if any.</p>
@@ -247,7 +247,7 @@
   <details>
     <summary><span class="method POST">POST</span> /poll/api</summary>
     <div class="section">
-      <p>Cast or change your vote. Name is stored server-side by IP.</p>
+      <p>Cast or change your vote. Name is stored server-side per user (identified by cookie).</p>
       <p><strong>Body</strong>:</p>
       <pre>{ "vote": "yes" }</pre>
       <p><strong>Success</strong> (200 OK):</p>
@@ -268,7 +268,7 @@
   <details>
     <summary><span class="method POST">POST</span> /poll/api/name</summary>
     <div class="section">
-      <p>Register or update your name (stored by IP).</p>
+      <p>Register or update your name (stored per user via cookie).</p>
       <p><strong>Body</strong>:</p>
       <pre>{ "name": "Alice" }</pre>
       <p><strong>Success</strong> (200 OK):</p>
@@ -301,7 +301,7 @@
   <details>
     <summary><span class="method POST">POST</span> /poll/api/form-posts</summary>
     <div class="section">
-      <p>Submit a new form post. Name is looked up by IP (must be registered first).</p>
+      <p>Submit a new form post. Name is looked up by user ID (must be registered first).</p>
       <p><strong>Body</strong>:</p>
       <pre>{ "text": "Hello world!" }</pre>
       <p><strong>Success</strong> (200 OK):</p>

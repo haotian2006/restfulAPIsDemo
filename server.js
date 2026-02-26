@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const cookieParser = require("cookie-parser");
 
 const PORT = 3000;
 
@@ -7,6 +8,7 @@ const pollRouter = require("./poll");
 const tasksRouter = require("./tasks");
 
 const app = express();
+app.use(cookieParser());
 
 app.use("/poll/api", pollRouter);
 app.get("/poll", (req, res) =>
