@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>API Documentation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#fafafa; }
+    h1 { color: #333; }
+    details { margin-bottom: 1em; border:1px solid #ddd; border-radius:4px; background:#fff; }
+    summary { font-weight: bold; cursor: pointer; padding:8px; display:block; }
+    pre { background:#f4f4f4; padding:10px; border-radius:4px; overflow-x:auto; }
+    code { background:#eef; padding:2px 4px; border-radius:3px; }
+    .section { margin-left: 20px; padding-bottom:8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 5px; }
+    th,td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    .method { display:inline-block; padding:2px 6px; border-radius:3px; color:#fff; font-size:0.9em; margin-right:6px; }
+    .GET { background:#007bff; }
+    .POST { background:#28a745; }
+    .PATCH { background:#ffc107; }
+    .PUT { background:#fd7e14; }
+    .DELETE { background:#dc3545; }
+    pre.curl { background:#272822; color:#f8f8f2; }
+    pre.curl .command { color:#a6e22e; font-weight:bold; }
+    pre.curl .flag { color:#f92672; }
+    pre.curl .url { color:#66d9ef; }
+    .curl-editable { cursor: text; user-select: all; }
+    .curl-editable:hover { background: #1f1f1f !important; }
+  </style>
+</head>
+<body>
+  <h1>API Reference</h1>
+  <p>The demo exposes REST endpoints for two features: <code>/poll</code> (voting and form posts) and <code>/tasks</code> (user data management).</p>
+
+  <h2>Tasks API</h2>
+  <p>Endpoints for user task tracking under <code>/tasks</code>.</p>
+
+  <details open>
+    <summary><span class="method POST">POST</span> /tasks/register</summary>
+    <div class="section">
+      <p>Create a new user. The response body contains an <code>id</code> which functions as the authentication key for subsequent requests – store it and send it in the <code>x-user-id</code> header on every call.</p>
+      <p><strong>Headers</strong>: <code>Content-Type: application/json</code></p>
+      <p><strong>Body</strong>:</p>
+      <pre>{
+  "name": "Alice"
+}</pre>
+      <p><strong>Success</strong> (201 Created):</p>
+      <pre>{ "id":"123456", "name":"Alice" }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X POST</span> \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"name":"Alice"}' \
+  <span class="url">http://testdemo.win/tasks/register</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing name or name already taken</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method POST">POST</span> /tasks/uploads</summary>
+    <div class="section">
+      <p>Create a new upload record.</p>
+      <p><strong>Headers</strong>: <code>x-user-id</code>, <code>Content-Type: application/json</code></p>
+      <p><strong>Body</strong>:</p>
+      <pre>{ "title":"My note", "content":"Lorem" }</pre>
+      <p><strong>Success</strong> (201 Created):</p>
+      <pre>{ "id":1, "title":"My note" }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X POST</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"title":"My note","content":"Lorem"}' \
+  <span class="url">http://testdemo.win/tasks/uploads</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing title or content</td></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method GET">GET</span> /tasks/uploads</summary>
+    <div class="section">
+      <p>List all uploads for the authenticated user.</p>
+      <p><strong>Headers</strong>: <code>x-user-id: &lt;id&gt;</code></p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>[{ "id":1, "title":"My note" }]</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="url">http://testdemo.win/tasks/uploads</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method GET">GET</span> /tasks/uploads/:id</summary>
+    <div class="section">
+      <p>Retrieve a single upload.</p>
+      <p><strong>Headers</strong>: <code>x-user-id</code></p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "id":1, "title":"My note", "content":"Lorem" }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="url">http://testdemo.win/tasks/uploads/1</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>404</td><td>Upload not found (also records a "viewed invalid upload" task)</td></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method PATCH">PATCH</span> /tasks/uploads/:id</summary>
+    <div class="section">
+      <p>Modify only the <code>content</code> field.</p>
+      <p><strong>Headers</strong>: <code>x-user-id</code>, <code>Content-Type: application/json</code></p>
+      <p><strong>Body</strong>:
+<pre>{ "content": "new text" }</pre></p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "success": true }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X PATCH</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"content":"new text"}' \
+  <span class="url">http://testdemo.win/tasks/uploads/1</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing content</td></tr>
+        <tr><td>404</td><td>Upload not found</td></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method PUT">PUT</span> /tasks/uploads/:id</summary>
+    <div class="section">
+      <p>Overwrite an upload's title and content entirely.</p>
+      <p><strong>Headers</strong>: same as PATCH.</p>
+      <p><strong>Body</strong>:
+<pre>{ "title":"New", "content":"Text" }</pre></p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "success": true }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X PUT</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"title":"New","content":"Text"}' \
+  <span class="url">http://testdemo.win/tasks/uploads/1</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing title or content</td></tr>
+        <tr><td>404</td><td>Upload not found</td></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method DELETE">DELETE</span> /tasks/uploads/:id</summary>
+    <div class="section">
+      <p>Delete (nullify) an upload.</p>
+      <p><strong>Headers</strong>: <code>x-user-id</code></p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "success": true }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X DELETE</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="url">http://testdemo.win/tasks/uploads/1</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>404</td><td>Upload not found</td></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method GET">GET</span> /tasks/completed</summary>
+    <div class="section">
+      <p>View tasks you've completed (renamed endpoint for clarity).</p>
+      <p><strong>Headers</strong>: <code>x-user-id</code> (required)</p>
+      <p><strong>No query</strong>: returns full finished list plus nonFinished array.</p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{
+  "tasks":["uploaded something","viewed uploads"],
+  "total":6,
+  "all":"uploaded something, viewed uploads, ...",
+  "nonFinished":["viewed an upload",...]
+}</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="url">http://testdemo.win/tasks/completed</span></pre>
+      <p><strong>With include query</strong>: <code>?include=&lt;substring&gt;</code> filters the completed tasks, and nonFinished returns only those not containing it.</p>
+      <pre>{
+  "include":"up",
+  "tasks":["uploaded something"],
+  "total":6,
+  "all":"...",
+  "nonFinished":["viewed an upload",...]
+}</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl"><span class="command">curl</span> \
+  <span class="flag">-H</span> "x-user-id: $ID" \
+  <span class="url">http://testdemo.win/tasks/completed?include=up</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>401</td><td>Invalid or missing user id</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <h2>Poll API</h2>
+  <p>Endpoints for voting and name management, accessed via <code>/poll/api</code>.</p>
+
+  <details>
+    <summary><span class="method GET">GET</span> /poll/api</summary>
+    <div class="section">
+      <p>Fetch current vote totals and user's stored name (based on IP).</p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "yes": 10, "no": 4, "name": "Alice", "voted": "yes" }</pre>
+      <p>Fields: <code>yes</code> and <code>no</code> are vote counts, <code>name</code> is the user's name, <code>voted</code> shows the user's current vote if any.</p>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl curl-editable" contenteditable="true"><span class="command">curl</span> <span class="flag">-i</span> \
+  <span class="url">http://testdemo.win/poll/api</span></pre>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method POST">POST</span> /poll/api</summary>
+    <div class="section">
+      <p>Cast or change your vote. Name is stored server-side by IP.</p>
+      <p><strong>Body</strong>:</p>
+      <pre>{ "vote": "yes" }</pre>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "success": true }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl curl-editable" contenteditable="true"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X POST</span> \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"vote":"yes"}' \
+  <span class="url">http://testdemo.win/poll/api</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing or invalid vote, or name not registered</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method POST">POST</span> /poll/api/name</summary>
+    <div class="section">
+      <p>Register or update your name (stored by IP).</p>
+      <p><strong>Body</strong>:</p>
+      <pre>{ "name": "Alice" }</pre>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "success": true }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl curl-editable" contenteditable="true"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X POST</span> \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"name":"YourName"}' \
+  <span class="url">http://testdemo.win/poll/api/name</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing or invalid name</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method GET">GET</span> /poll/api/form-posts</summary>
+    <div class="section">
+      <p>Fetch all form posts.</p>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>[{ "name": "Alice", "text": "Hello!", "timestamp": "2026-02-26T12:00:00Z" }]</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl curl-editable" contenteditable="true"><span class="command">curl</span> <span class="flag">-i</span> \
+  <span class="url">http://testdemo.win/poll/api/form-posts</span></pre>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="method POST">POST</span> /poll/api/form-posts</summary>
+    <div class="section">
+      <p>Submit a new form post. Name is looked up by IP (must be registered first).</p>
+      <p><strong>Body</strong>:</p>
+      <pre>{ "text": "Hello world!" }</pre>
+      <p><strong>Success</strong> (200 OK):</p>
+      <pre>{ "success": true }</pre>
+      <p><strong>Example curl</strong>:</p>
+      <pre class="curl curl-editable" contenteditable="true"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X POST</span> \
+  <span class="flag">-H</span> "Content-Type: application/json" \
+  <span class="flag">-d</span> '{"text":"Your message here"}' \
+  <span class="url">http://testdemo.win/poll/api/form-posts</span></pre>
+      <p><strong>Errors</strong>:</p>
+      <table>
+        <tr><th>Status</th><th>Reason</th></tr>
+        <tr><td>400</td><td>Missing text or name not registered</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <script>
+    // Make curl examples editable and copyable
+    document.querySelectorAll('.curl-editable').forEach(el => {
+      el.title = 'Click to select and edit. You can replace the curl command inline!';
+      el.addEventListener('click', () => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      });
+    });
+  </script>
+</body>
+</html>

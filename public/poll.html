@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Simple Poll</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f7f7f7;
+    }
+    .wrapper {
+      width: 90%;
+      max-width: 500px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fafafa;
+    }
+    button:hover {
+      background: #eee;
+    }
+    .bar { height: 24px; background: lightblue; transition: width 0.3s; }
+    .container { width: 100%; background: #eee; margin-bottom: 12px; border-radius: 4px; overflow: hidden; }
+    h1 { font-size: 1.2rem; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>Have you ever created an HTTP server or sent HTTP requests?</h1>
+    <p id="nameDisplay" style="font-size:0.9rem;color:#555;"></p>
+    <p style="text-align:center;margin-bottom:20px;"><button onclick="location.href='/poll/forum.html'" style="padding:10px 20px;font-size:1rem;">Open Forum</button></p>
+    <div>
+      <button id="yes">Yes</button>
+      <button id="no">No</button>
+    </div>
+  <div class="container"><div id="yesBar" class="bar"></div></div>
+  <div class="container"><div id="noBar" class="bar"></div></div>
+  <p id="yesPct">Yes: 0%</p>
+  <p id="noPct">No: 0%</p>
+  <p id="totalResponses" style="font-weight:bold;margin-top:15px;">Total responses: 0</p>
+  <script>
+    function markVote(vote) {
+      const yesBtn = document.getElementById('yes');
+      const noBtn = document.getElementById('no');
+      yesBtn.style.fontWeight = vote === 'yes' ? 'bold' : 'normal';
+      noBtn.style.fontWeight = vote === 'no' ? 'bold' : 'normal';
+    }
+
+    const API = '/poll/api';
+
+    async function cast(vote) {
+      try {
+        await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vote })
+        });
+        markVote(vote);
+        update();
+      } catch (err) {
+        console.error('vote failed', err);
+      }
+    }
+
+    document.getElementById('yes').onclick = () => cast('yes');
+    document.getElementById('no').onclick = () => cast('no');
+
+    const stored = localStorage.getItem('voted');
+    if (stored) {
+      markVote(stored);
+    }
+
+    async function ensureName() {
+      const res = await fetch(API);
+      const data = await res.json();
+
+      if (data.name) {
+        return data.name;
+      }
+
+      let name;
+      do {
+        name = prompt('Please enter your name');
+        if (name === null) return null;
+      } while (!name || !name.trim());
+
+      if (name) {
+        name = name.trim();
+        await fetch(API + '/name', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        return name;
+      }
+      return null;
+    }
+
+    async function loadAndMaybeDisable() {
+      const res = await fetch(API);
+      const data = await res.json();
+
+      if (!data.name) {
+        const name = await ensureName();
+        if (name) {
+          document.getElementById('nameDisplay').textContent = 'Name: ' + name;
+        }
+      } else {
+        document.getElementById('nameDisplay').textContent = 'Name: ' + data.name;
+      }
+
+      if (data.voted) {
+        markVote(data.voted);
+        localStorage.setItem('voted', data.voted);
+      }
+      return data;
+    }
+
+    async function update() {
+      const data = await loadAndMaybeDisable();
+      const total = data.yes + data.no;
+      const yesPerc = total ? ((data.yes / total) * 100).toFixed(1) : 0;
+      const noPerc = total ? ((data.no / total) * 100).toFixed(1) : 0;
+      document.getElementById('yesBar').style.width = yesPerc + '%';
+      document.getElementById('noBar').style.width = noPerc + '%';
+      document.getElementById('yesPct').textContent = 'Yes: ' + yesPerc + '%';
+      document.getElementById('noPct').textContent = 'No: ' + noPerc + '%';
+      document.getElementById('totalResponses').textContent = 'Total responses: ' + total;
+    }
+
+    update();
+    setInterval(update, 2000);
+  </script>
+  </div>
+</body>
+</html>

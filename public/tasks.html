@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Task Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f7f7f7;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .user-info {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+    .bar-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .bar {
+      height: 20px;
+      background: lightblue;
+      transition: width 0.3s;
+    }
+    .bar-bg {
+      flex: 1;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-right: 10px;
+    }
+    .user-name {
+      flex-shrink: 0;
+      width: 120px;
+      text-align: right;
+      margin-right: 10px;
+    }
+    input[type=text] {
+      padding: 8px;
+      width: 200px;
+      margin-right: 8px;
+    }
+    button {
+      padding: 8px 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tasks Dashboard</h1>
+    <h2>All users</h2>
+    <div id="users-list"></div>
+
+  </div>
+  <script>
+    const apiBase = window.location.origin + '/tasks';
+
+    // no registration/login required for this dashboard
+
+    async function fetchStatus() {
+      const res = await fetch(apiBase + '/status');
+      const data = await res.json();
+      renderUsers(data.status || {});
+    }
+
+    function renderUsers(status) {
+      const container = document.getElementById('users-list');
+      container.innerHTML = '';
+      const total = Object.values(status)[0]?.total || 0;
+      for (const [name, info] of Object.entries(status)) {
+        const barWidth = total ? (info.finished / info.total) * 100 : 0;
+        const row = document.createElement('div');
+        row.className = 'bar-container';
+        row.innerHTML = `
+          <div class="user-name">${name}</div>
+          <div class="bar-bg"><div class="bar" style="width:${barWidth}%;"></div></div>
+          <div class="count">${info.finished}/${info.total}</div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    // initialize periodic fetch of status
+    fetchStatus();
+    setInterval(fetchStatus, 3000);
+  </script>
+</body>
+</html>

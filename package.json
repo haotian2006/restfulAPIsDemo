@@ -1,9 +1,9 @@
 {
   "name": "restfulapisdemo",
   "version": "1.0.0",
-  "main": "demoapp.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node demoapp.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
