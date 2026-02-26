@@ -115,7 +115,7 @@
       <p><strong>Errors</strong>:</p>
       <table>
         <tr><th>Status</th><th>Reason</th></tr>
-        <tr><td>404</td><td>Upload not found (also records a "viewed invalid upload" task)</td></tr>
+        <tr><td>404</td><td>Upload not found</td></tr>
         <tr><td>401</td><td>Invalid or missing user id</td></tr>
       </table>
     </div>
@@ -146,30 +146,6 @@
     </div>
   </details>
 
-  <details>
-    <summary><span class="method PUT">PUT</span> /tasks/uploads/:id</summary>
-    <div class="section">
-      <p>Overwrite an upload's title and content entirely.</p>
-      <p><strong>Headers</strong>: same as PATCH.</p>
-      <p><strong>Body</strong>:
-<pre>{ "title":"New", "content":"Text" }</pre></p>
-      <p><strong>Success</strong> (200 OK):</p>
-      <pre>{ "success": true }</pre>
-      <p><strong>Example curl</strong>:</p>
-      <pre class="curl"><span class="command">curl</span> <span class="flag">-i</span> <span class="flag">-X PUT</span> \
-  <span class="flag">-H</span> "x-user-id: $ID" \
-  <span class="flag">-H</span> "Content-Type: application/json" \
-  <span class="flag">-d</span> '{"title":"New","content":"Text"}' \
-  <span class="url">http://testdemo.win/tasks/uploads/1</span></pre>
-      <p><strong>Errors</strong>:</p>
-      <table>
-        <tr><th>Status</th><th>Reason</th></tr>
-        <tr><td>400</td><td>Missing title or content</td></tr>
-        <tr><td>404</td><td>Upload not found</td></tr>
-        <tr><td>401</td><td>Invalid or missing user id</td></tr>
-      </table>
-    </div>
-  </details>
 
   <details>
     <summary><span class="method DELETE">DELETE</span> /tasks/uploads/:id</summary>

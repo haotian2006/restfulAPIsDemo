@@ -7,11 +7,9 @@ const users = new Map();
 
 const TASKS = Object.freeze({
   CREATED_UPLOAD: "created an upload",
-  VIEWED_BAD_UPLOAD: "attempted to view non-existent upload",
   LISTED_UPLOADS: "listed all uploads",
   VIEWED_UPLOAD: "viewed a specific upload",
   PATCHED_UPLOAD: "patched an upload's content",
-  REPLACED_UPLOAD: "overwrote an upload with new title/content",
   REMOVED_UPLOAD: "deleted an upload",
   SEARCHED_TASKS: "queried tasks",
   RETRIEVED_TASKS: "retrieved completed tasks",
@@ -91,7 +89,6 @@ router.get("/uploads/:id", (req, res) => {
   const uploads = userUploads.get(req.userId);
   const upload = uploads[parseInt(req.params.id) - 1];
   if (!upload) {
-    passTask(req.userId, TASKS.VIEWED_BAD_UPLOAD);
     return res.status(404).json({ error: "upload not found" });
   }
   passTask(req.userId, TASKS.VIEWED_UPLOAD);
@@ -114,22 +111,6 @@ router.patch("/uploads/:id", (req, res) => {
     content,
   };
   passTask(req.userId, TASKS.PATCHED_UPLOAD);
-  res.json({ success: true });
-});
-
-router.put("/uploads/:id", (req, res) => {
-  const uploads = userUploads.get(req.userId);
-  const id = parseInt(req.params.id);
-  if (id < 1 || id > uploads.length) {
-    return res.status(404).json({ error: "upload not found" });
-  }
-  const title = req.body.title;
-  const content = req.body.content;
-  if (!title || !content) {
-    return res.status(400).json({ error: "missing title or content" });
-  }
-  uploads[id - 1] = { id, title, content };
-  passTask(req.userId, TASKS.REPLACED_UPLOAD);
   res.json({ success: true });
 });
 
